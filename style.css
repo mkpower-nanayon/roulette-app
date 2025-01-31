@@ -1,3 +1,19 @@
+/* 画面幅が600px以下のデバイス用 */
+/* 画面幅が600px以下のデバイス用 */
+@media only screen and (max-width: 600px) {
+    body {
+        font-size: 14px; /* フォントサイズを小さく */
+        padding: 10px;   /* 余白を調整 */
+    }
+    .roulette-container {
+        margin-top: 20px;
+        text-align: center;
+    }
+    #map {
+        height: 300px; /* iPhoneなどの小さな画面では地図の高さを少し小さく */
+    }
+}
+
 #map {
     height: 400px;  /* 地図の高さ */
     width: 100%;
@@ -15,4 +31,19 @@
     margin-bottom: 10px;  /* ボタンや選択肢の間にスペース */
     padding: 10px;
     font-size: 16px;
+}
+h1 {
+    font-size: 26px; /* タイトルのフォントサイズ */
+    text-align: center;  /* タイトルを中央揃え */
+    line-height: 1.2;  /* 行間を少し広く */
+}
+
+#destination {
+    font-size: 24px;  /* 結果のフォントサイズ */
+    width: 80%;  /* 結果表示の幅を調整 */
+    margin: 20px auto;  /* 中央揃え */
+    text-align: center;  /* 結果を中央揃え */
+    padding: 10px;
+    background: rgba(255, 255, 255, 0.8);
+    border-radius: 10px;
 }
