@@ -204,7 +204,7 @@
                     if (marker) map.removeLayer(marker);
                     marker = L.marker([finalStation.lat, finalStation.lon]).addTo(map)
                         .bindPopup(`目的地: ${finalStation.name}`).openPopup();
-                    document.getElementById("destination").innerHTML = `今回の目的地は<br><strong>${finalStation.name}</strong>`;
+                    document.getElementById("destination").innerHTML = `<span style='font-size: 18px;'>今回の目的地は</span><br><strong>${finalStation.name}</strong>`;
                     document.getElementById("destination").style.display = "block";
                     setTimeout(() => document.getElementById("destination").style.opacity = "1", 100);
                     return;
