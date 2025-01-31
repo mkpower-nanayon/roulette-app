@@ -1,11 +1,18 @@
-/* 画面幅が600px以下のデバイス用 */
-@media only screen and (max-width: 600px) {
-    body {
-        font-size: 14px; /* フォントサイズを小さく */
-        padding: 10px;   /* 余白を調整 */
-    }
-    .roulette-container {
-        margin-top: 20px;
-        text-align: center;
-    }
+#map {
+    height: 400px;  /* 地図の高さ */
+    width: 100%;
+    margin-bottom: 20px;  /* 地図とボタンの間にスペース */
+}
+
+.buttons {
+    display: flex;
+    flex-direction: column;  /* ボタンを縦並びにする */
+    align-items: center;  /* ボタンを中央揃え */
+    margin-top: 20px;  /* 地図から少し下げる */
+}
+
+.buttons button, .buttons select {
+    margin-bottom: 10px;  /* ボタンや選択肢の間にスペース */
+    padding: 10px;
+    font-size: 16px;
 }
