@@ -1,0 +1,11 @@
+/* 画面幅が600px以下のデバイス用 */
+@media only screen and (max-width: 600px) {
+    body {
+        font-size: 14px; /* フォントサイズを小さく */
+        padding: 10px;   /* 余白を調整 */
+    }
+    .roulette-container {
+        margin-top: 20px;
+        text-align: center;
+    }
+}
