@@ -6,48 +6,49 @@
     <title>新幹線旅ルーレット</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-    <audio id="drumroll" src="https://www.soundjay.com/button/small-drum-roll-1.mp3"></audio>
     <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+        }
+        
         #destination {
             display: none;
             position: absolute;
-            top: 10%;
+            top: 5%; /* 地図と干渉しないよう調整 */
             left: 50%;
             transform: translateX(-50%);
-            font-size: 32px;
+            font-size: max(5vw, 32px); /* iPhone画面サイズに適応 */
             font-weight: bold;
-            font-family: "KaiTi", "楷書体", serif;
-            background: rgba(255, 255, 255, 0.8);
-            padding: 10px;
-            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 15px;
+            border-radius: 12px;
             opacity: 0;
             transition: opacity 2s ease-in;
+            z-index: 10; /* 最前面に表示 */
         }
+        
         #map {
             height: 400px;
+            margin-top: 50px;
         }
     </style>
 </head>
 <body>
     <h1>新幹線の旅<br>目的地ルーレット</h1>
-    <select id="lineFilter" onchange="updateFilteredStations()">
-        <option value="all">すべて</option>
-       <option value="北海道新幹線">北海道道新幹線</option>
-        <option value="東北新幹線">東北道新幹線</option>
-        <option value="北陸新幹線">北陸新幹線</option>
-        <option value="上越新幹線">上越新幹線</option>
-        <option value="東海道新幹線">東海道新幹線</option>
-    　　<option value="山陽新幹線">山陽新幹線</option>
-　　    <option value="九州新幹線">九州新幹線</option>
-	    </select>
     <button onclick="drawStation()">駅を抽選</button>
     <button onclick="resetMap()">リセット</button>
-    <p id="result">ここに結果が表示されます</p>
     <div id="map"></div>
     <div id="destination"></div>
 
     <script>
-        const stations = [
+        let map = L.map('map').setView([35.681236, 139.767125], 6);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; OpenStreetMap contributors'
+        }).addTo(map);
+        
+        function drawStation() {
+            const stations = [
         { "name": "東京駅", "line": "東海道新幹線", "lat": 35.681236, "lon": 139.767125 },
         { "name": "品川駅", "line": "東海道新幹線", "lat": 35.628471, "lon": 139.73876 },
         { "name": "新横浜駅", "line": "東海道新幹線", "lat": 35.506081, "lon": 139.61757 },
@@ -189,88 +190,16 @@
         { "name": "諫早駅", "line": "西九州新幹線", "lat": 32.844722, "lon": 130.047778 },
         { "name": "長崎駅", "line": "西九州新幹線", "lat": 32.751389, "lon": 129.873056 }
     ];
-        
-        let filteredStations = [...stations];
-        let map;
-        let marker = null;
-        
-        document.addEventListener("DOMContentLoaded", () => {
-            map = L.map('map').setView([35.681236, 139.767125], 6);
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '&copy; OpenStreetMap contributors'
-            }).addTo(map);
-        });
-        
-        function updateFilteredStations() {
-            const selectedLine = document.getElementById("lineFilter").value;
-            filteredStations = selectedLine === "all" ? [...stations] : stations.filter(st => st.line === selectedLine);
-        }
-        
-        function drawStation() {
-            if (filteredStations.length === 0) {
-                document.getElementById("result").innerText = "該当する駅がありません";
-                return;
-            }
             
-            const drumroll = document.getElementById("drumroll");
-            drumroll.play().catch(error => console.log("音声の再生に失敗しました", error));
-            
-            let displayTime = 4; // 240fps (4ms間隔)
-            let elapsedTime = 0;
-            const maxTime = 10000; // 10秒
-            let lastStation = null;  // 最後の駅
-            
-            if (marker) {
-                map.removeLayer(marker);
-            }
-            
-            function animateSelection() {
-                if (elapsedTime >= maxTime) {
-                    // 最後の駅を決定
-                    const finalStation = filteredStations[Math.floor(Math.random() * filteredStations.length)];
-                    lastStation = finalStation;
-                    
-                    // 最終結果の前に、これまでのマーカーを削除
-                    if (marker) {
-                        map.removeLayer(marker);
-                    }
-                    
-                    // 最終結果のマーカーを表示
-                    marker = L.marker([finalStation.lat, finalStation.lon]).addTo(map)
-                        .bindPopup(`目的地: ${finalStation.name}`).openPopup();
-                    
-                    // 結果表示
-                    document.getElementById("result").innerText = `${finalStation.name}(${finalStation.line})`;
-                    const destination = document.getElementById("destination");
-                    destination.innerHTML = `今回の旅の目的地は <span style="font-size: 48px;">${finalStation.name}</span>`;
-                    destination.style.display = "block";
-                    setTimeout(() => destination.style.opacity = "1", 100);
-                    return;
-                }
-                
-                if (marker) {
-                    map.removeLayer(marker);
-                }
-                
-                const tempStation = filteredStations[Math.floor(Math.random() * filteredStations.length)];
-                document.getElementById("result").innerText = `${tempStation.name}(${tempStation.line})`;
-                marker = L.marker([tempStation.lat, tempStation.lon]).addTo(map);
-                
-                elapsedTime += displayTime;
-                displayTime *= 1.1;
-                setTimeout(animateSelection, displayTime);
-            }
-            animateSelection();
+            const randomStation = stations[Math.floor(Math.random() * stations.length)];
+            document.getElementById("destination").innerHTML = `目的地: <strong>${randomStation.name}</strong>`;
+            document.getElementById("destination").style.display = "block";
+            setTimeout(() => document.getElementById("destination").style.opacity = "1", 100);
         }
         
         function resetMap() {
-            document.getElementById("result").innerText = "ここに結果が表示されます";
-            document.getElementById("destination").style.display = "none";
             document.getElementById("destination").style.opacity = "0";
-            if (marker) {
-                map.removeLayer(marker);
-                marker = null;
-            }
+            setTimeout(() => document.getElementById("destination").style.display = "none", 2000);
         }
     </script>
 </body>
