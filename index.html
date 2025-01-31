@@ -79,7 +79,8 @@
 </head>
 <body>
     <h1>新幹線の旅<br>目的地ルーレット</h1>
-    <div id="map"></div>
+    
+    <!-- フィルター機能とボタン -->
     <div class="buttons">
         <button onclick="drawStation()">駅を抽選</button>
         <button onclick="resetMap()">リセット</button>
@@ -94,7 +95,13 @@
             <option value="九州新幹線">九州新幹線</option>
         </select>
     </div>
+
+    <!-- 地図の表示 -->
+    <div id="map"></div>
+
+    <!-- 結果表示 -->
     <div id="destination"></div>
+</body>
 
     <script>
     const stations = [
