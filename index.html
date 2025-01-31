@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>新幹線の旅 目的地ルーレット</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <audio id="drumroll" src="https://www.soundjay.com/button/small-drum-roll-1.mp3"></audio>
+    <style>
+        #destination {
+            display: none;
+            position: absolute;
+            top: 10%;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 32px;
+            font-weight: bold;
+            font-family: "KaiTi", "楷書体", serif;
+            background: rgba(255, 255, 255, 0.8);
+            padding: 10px;
+            border-radius: 10px;
+            opacity: 0;
+            transition: opacity 2s ease-in;
+        }
+        #map {
+            height: 400px;
+        }
+    </style>
+</head>
+<body>
+    <h1>新幹線の旅 目的地ルーレット</h1>
+    <select id="lineFilter" onchange="updateFilteredStations()">
+        <option value="all">すべて</option>
+	<option value="北海道新幹線">北海道新幹線</option>
+        <option value="東北新幹線">東北新幹線</option>
+        <option value="上越新幹線">上越新幹線</option>
+	<option value="北陸新幹線">北陸新幹線</option>
+        <option value="東海道新幹線">東海道新幹線</option>
+        <option value="山陽新幹線">山陽新幹線</option>
+        <option value="九州新幹線">九州新幹線</option>
+    </select>
+    <button onclick="drawStation()">駅を抽選</button>
+    <button onclick="resetMap()">リセット</button>
+    <p id="result">ここに結果が表示されます</p>
+    <div id="map"></div>
+    <div id="destination"></div>
+
+    <script>
+    const stations = [
+        { "name": "東京駅", "line": "東海道新幹線", "lat": 35.681236, "lon": 139.767125 },
+        { "name": "品川駅", "line": "東海道新幹線", "lat": 35.628471, "lon": 139.73876 },
+        { "name": "新横浜駅", "line": "東海道新幹線", "lat": 35.506081, "lon": 139.61757 },
+        { "name": "名古屋駅", "line": "東海道新幹線", "lat": 35.170915, "lon": 136.881537 },
+        { "name": "京都駅", "line": "東海道新幹線", "lat": 34.985849, "lon": 135.758766 },
+        { "name": "新大阪駅", "line": "東海道新幹線", "lat": 34.7334, "lon": 135.5006 },
+        { "name": "新神戸駅", "line": "山陽新幹線", "lat": 34.705555, "lon": 135.195555 },
+        { "name": "西明石駅", "line": "山陽新幹線", "lat": 34.685, "lon": 134.975 },
+        { "name": "姫路駅", "line": "山陽新幹線", "lat": 34.826389, "lon": 134.685 },
+        { "name": "相生駅", "line": "山陽新幹線", "lat": 34.803889, "lon": 134.468889 },
+        { "name": "岡山駅", "line": "山陽新幹線", "lat": 34.665, "lon": 133.9175 },
+        { "name": "新倉敷駅", "line": "山陽新幹線", "lat": 34.585, "lon": 133.748333 },
+        { "name": "福山駅", "line": "山陽新幹線", "lat": 34.485833, "lon": 133.362222 },
+        { "name": "新尾道駅", "line": "山陽新幹線", "lat": 34.408333, "lon": 133.204167 },
+        { "name": "三原駅", "line": "山陽新幹線", "lat": 34.395, "lon": 133.083333 },
+        { "name": "東広島駅", "line": "山陽新幹線", "lat": 34.426111, "lon": 132.743889 },
+        { "name": "広島駅", "line": "山陽新幹線", "lat": 34.396389, "lon": 132.475 },
+        { "name": "新岩国駅", "line": "山陽新幹線", "lat": 34.15, "lon": 132.218889 },
+        { "name": "徳山駅", "line": "山陽新幹線", "lat": 34.05, "lon": 131.816667 },
+        { "name": "新山口駅", "line": "山陽新幹線", "lat": 34.066667, "lon": 131.433333 },
+        { "name": "厚狭駅", "line": "山陽新幹線", "lat": 34.016667, "lon": 131.15 },
+        { "name": "新下関駅", "line": "山陽新幹線", "lat": 33.95, "lon": 130.95 },
+        { "name": "小倉駅", "line": "山陽新幹線", "lat": 33.883333, "lon": 130.883333 },
+        { "name": "博多駅", "line": "山陽新幹線", "lat": 33.589722, "lon": 130.420833 },
+        { "name": "鹿児島中央駅", "line": "九州新幹線", "lat": 31.588056, "lon": 130.558056 },
+        { "name": "川内駅", "line": "九州新幹線", "lat": 31.817222, "lon": 130.313611 },
+        { "name": "出水駅", "line": "九州新幹線", "lat": 32.091111, "lon": 130.359722 },
+        { "name": "新八代駅", "line": "九州新幹線", "lat": 32.501667, "lon": 130.642222 },
+        { "name": "熊本駅", "line": "九州新幹線", "lat": 32.789722, "lon": 130.693333 },
+        { "name": "新玉名駅", "line": "九州新幹線", "lat": 32.925, "lon": 130.558333 },
+        { "name": "新大牟田駅", "line": "九州新幹線", "lat": 33.081111, "lon": 130.465833 },
+        { "name": "筑後船小屋駅", "line": "九州新幹線", "lat": 33.183333, "lon": 130.485833 },
+        { "name": "久留米駅", "line": "九州新幹線", "lat": 33.319722, "lon": 130.508889 },
+        { "name": "新鳥栖駅", "line": "九州新幹線", "lat": 33.358056, "lon": 130.5125 },
+        { "name": "佐賀駅", "line": "西九州新幹線", "lat": 33.263333, "lon": 130.300833 },
+        { "name": "武雄温泉駅", "line": "西九州新幹線", "lat": 33.195278, "lon": 130.021111 },
+        { "name": "嬉野温泉駅", "line": "西九州新幹線", "lat": 33.125278, "lon": 129.986944 },
+        { "name": "新大村駅", "line": "西九州新幹線", "lat": 32.916944, "lon": 129.923056 },
+        { "name": "諫早駅", "line": "西九州新幹線", "lat": 32.841667, "lon": 130.049444 },
+        { "name": "長崎駅", "line": "西九州新幹線", "lat": 32.750278, "lon": 129.877222 },
+        
+	// 東北新幹線
+        { "name": "福島駅", "line": "東北新幹線", "lat": 37.760833, "lon": 140.474722 },
+        { "name": "郡山駅", "line": "東北新幹線", "lat": 37.398056, "lon": 140.384444 },
+        { "name": "新白河駅", "line": "東北新幹線", "lat": 37.119722, "lon": 140.216389 },
+        { "name": "那須塩原駅", "line": "東北新幹線", "lat": 36.961389, "lon": 140.048889 },
+        { "name": "宇都宮駅", "line": "東北新幹線", "lat": 36.550833, "lon": 139.8975 },
+        { "name": "小山駅", "line": "東北新幹線", "lat": 36.312222, "lon": 139.801389 },
+        
+	// 北海道新幹線
+        { "name": "奥津軽いまべつ駅", "line": "北海道新幹線", "lat": 41.181389, "lon": 140.534167 },
+        { "name": "木古内駅", "line": "北海道新幹線", "lat": 41.6775, "lon": 140.436667 },
+        { "name": "新函館北斗駅", "line": "北海道新幹線", "lat": 41.901111, "lon": 140.643333 },
+        
+	// 北陸新幹線
+        { "name": "上越妙高駅", "line": "北陸新幹線", "lat": 37.144167, "lon": 138.236111 },
+        { "name": "飯山駅", "line": "北陸新幹線", "lat": 36.850278, "lon": 138.366944 },
+        { "name": "長野駅", "line": "北陸新幹線", "lat": 36.643333, "lon": 138.188889 },
+        { "name": "上田駅", "line": "北陸新幹線", "lat": 36.402222, "lon": 138.249722 },
+        { "name": "佐久平駅", "line": "北陸新幹線", "lat": 36.314444, "lon": 138.474722 },
+        { "name": "軽井沢駅", "line": "北陸新幹線", "lat": 36.348056, "lon": 138.635556 },
+        
+	// 東海道新幹線
+        { "name": "品川駅", "line": "東海道新幹線", "lat": 35.628472, "lon": 139.73876 },
+        { "name": "新横浜駅", "line": "東海道新幹線", "lat": 35.506378, "lon": 139.617278 },
+        { "name": "小田原駅", "line": "東海道新幹線", "lat": 35.256667, "lon": 139.154444 },
+        { "name": "熱海駅", "line": "東海道新幹線", "lat": 35.103333, "lon": 139.077222 },
+        { "name": "三島駅", "line": "東海道新幹線", "lat": 35.118611, "lon": 138.918889 },
+        { "name": "新富士駅", "line": "東海道新幹線", "lat": 35.153889, "lon": 138.676944 },
+        { "name": "静岡駅", "line": "東海道新幹線", "lat": 34.971944, "lon": 138.388889 },
+        { "name": "掛川駅", "line": "東海道新幹線", "lat": 34.768333, "lon": 137.998611 },
+        { "name": "浜松駅", "line": "東海道新幹線", "lat": 34.703889, "lon": 137.734167 },
+        { "name": "豊橋駅", "line": "東海道新幹線", "lat": 34.762778, "lon": 137.383611 },
+        { "name": "三河安城駅", "line": "東海道新幹線", "lat": 34.950278, "lon": 137.060833 },
+        { "name": "名古屋駅", "line": "東海道新幹線", "lat": 35.170833, "lon": 136.881111 },
+        { "name": "岐阜羽島駅", "line": "東海道新幹線", "lat": 35.319167, "lon": 136.686944 },
+        { "name": "米原駅", "line": "東海道新幹線", "lat": 35.315, "lon": 136.293889 },
+
+        // 山陽新幹線
+        { "name": "新神戸駅", "line": "山陽新幹線", "lat": 34.705278, "lon": 135.195278 },
+        { "name": "西明石駅", "line": "山陽新幹線", "lat": 34.685833, "lon": 134.976389 },
+        { "name": "姫路駅", "line": "山陽新幹線", "lat": 34.826667, "lon": 134.6875 },
+        { "name": "相生駅", "line": "山陽新幹線", "lat": 34.813333, "lon": 134.468333 },
+        { "name": "岡山駅", "line": "山陽新幹線", "lat": 34.666667, "lon": 133.918611 },
+        { "name": "新倉敷駅", "line": "山陽新幹線", "lat": 34.577222, "lon": 133.693056 },
+        { "name": "福山駅", "line": "山陽新幹線", "lat": 34.485833, "lon": 133.362222 },
+        { "name": "新尾道駅", "line": "山陽新幹線", "lat": 34.4175, "lon": 133.195278 },
+        { "name": "三原駅", "line": "山陽新幹線", "lat": 34.399444, "lon": 133.078611 },
+        { "name": "東広島駅", "line": "山陽新幹線", "lat": 34.426389, "lon": 132.743333 },
+        { "name": "広島駅", "line": "山陽新幹線", "lat": 34.397222, "lon": 132.475 },
+        { "name": "新岩国駅", "line": "山陽新幹線", "lat": 34.166667, "lon": 132.2175 },
+        { "name": "徳山駅", "line": "山陽新幹線", "lat": 34.051389, "lon": 131.815833 },
+        { "name": "新山口駅", "line": "山陽新幹線", "lat": 34.178056, "lon": 131.473333 },
+        { "name": "厚狭駅", "line": "山陽新幹線", "lat": 34.051667, "lon": 131.150833 },
+        { "name": "新下関駅", "line": "山陽新幹線", "lat": 34.016111, "lon": 130.951389 },
+        { "name": "小倉駅", "line": "山陽新幹線", "lat": 33.885, "lon": 130.881111 },
+        { "name": "博多駅", "line": "山陽新幹線", "lat": 33.590278, "lon": 130.420833 },
+
+        // 上越新幹線
+        { "name": "高崎駅", "line": "上越新幹線", "lat": 36.322222, "lon": 139.010556 },
+        { "name": "上毛高原駅", "line": "上越新幹線", "lat": 36.694444, "lon": 138.987222 },
+        { "name": "越後湯沢駅", "line": "上越新幹線", "lat": 36.930833, "lon": 138.812778 },
+        { "name": "浦佐駅", "line": "上越新幹線", "lat": 37.199167, "lon": 138.989722 },
+        { "name": "長岡駅", "line": "上越新幹線", "lat": 37.447222, "lon": 138.851389 },
+        
+	// 北陸新幹線
+        { "name": "燕三条駅", "line": "北陸新幹線", "lat": 37.672778, "lon": 138.885556 },
+        { "name": "上越妙高駅", "line": "北陸新幹線", "lat": 37.148889, "lon": 138.236111 },
+        { "name": "糸魚川駅", "line": "北陸新幹線", "lat": 37.043333, "lon": 137.861389 },
+        { "name": "黒部宇奈月温泉駅", "line": "北陸新幹線", "lat": 36.937222, "lon": 137.488889 },
+        { "name": "富山駅", "line": "北陸新幹線", "lat": 36.700833, "lon": 137.213611 },
+        { "name": "新高岡駅", "line": "北陸新幹線", "lat": 36.696111, "lon": 137.016111 },
+        { "name": "金沢駅", "line": "北陸新幹線", "lat": 36.578056, "lon": 136.6475 },
+        { "name": "小松駅", "line": "北陸新幹線", "lat": 36.4025, "lon": 136.453611 },
+        { "name": "加賀温泉駅", "line": "北陸新幹線", "lat": 36.309167, "lon": 136.342222 },
+        { "name": "芦原温泉駅", "line": "北陸新幹線", "lat": 36.2275, "lon": 136.200556 },
+        { "name": "福井駅", "line": "北陸新幹線", "lat": 36.061667, "lon": 136.221667 },
+        { "name": "越前たけふ駅", "line": "北陸新幹線", "lat": 35.925556, "lon": 136.142222 },
+        { "name": "敦賀駅", "line": "北陸新幹線", "lat": 35.645, "lon": 136.055278 },
+
+        // 九州新幹線
+        { "name": "博多駅", "line": "九州新幹線", "lat": 33.590278, "lon": 130.420833 },
+        { "name": "新鳥栖駅", "line": "九州新幹線", "lat": 33.370833, "lon": 130.442778 },
+        { "name": "久留米駅", "line": "九州新幹線", "lat": 33.319167, "lon": 130.508889 },
+        { "name": "筑後船小屋駅", "line": "九州新幹線", "lat": 33.218611, "lon": 130.475833 },
+        { "name": "新大牟田駅", "line": "九州新幹線", "lat": 32.999444, "lon": 130.434444 },
+        { "name": "新玉名駅", "line": "九州新幹線", "lat": 32.930278, "lon": 130.561944 },
+        { "name": "熊本駅", "line": "九州新幹線", "lat": 32.789722, "lon": 130.688889 },
+        { "name": "新八代駅", "line": "九州新幹線", "lat": 32.5, "lon": 130.6425 },
+        { "name": "新水俣駅", "line": "九州新幹線", "lat": 32.196944, "lon": 130.487222 },
+        { "name": "出水駅", "line": "九州新幹線", "lat": 32.088056, "lon": 130.357222 },
+        { "name": "川内駅", "line": "九州新幹線", "lat": 31.813611, "lon": 130.312222 },
+        { "name": "鹿児島中央駅", "line": "九州新幹線", "lat": 31.588056, "lon": 130.541944 },
+
+        // 西九州新幹線（長崎新幹線）
+        { "name": "武雄温泉駅", "line": "西九州新幹線", "lat": 33.193056, "lon": 130.023611 },
+        { "name": "嬉野温泉駅", "line": "西九州新幹線", "lat": 33.128056, "lon": 129.996389 },
+        { "name": "新大村駅", "line": "西九州新幹線", "lat": 32.910833, "lon": 129.950556 },
+        { "name": "諫早駅", "line": "西九州新幹線", "lat": 32.844722, "lon": 130.047778 },
+        { "name": "長崎駅", "line": "西九州新幹線", "lat": 32.751389, "lon": 129.873056 }
+    ];
+        
+        let filteredStations = [...stations];
+        let map;
+        let marker = null;
+        
+        document.addEventListener("DOMContentLoaded", () => {
+            map = L.map('map').setView([35.681236, 139.767125], 6);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; OpenStreetMap contributors'
+            }).addTo(map);
+        });
+        
+        function updateFilteredStations() {
+            const selectedLine = document.getElementById("lineFilter").value;
+            filteredStations = selectedLine === "all" ? [...stations] : stations.filter(st => st.line === selectedLine);
+        }
+        
+        function drawStation() {
+            if (filteredStations.length === 0) {
+                document.getElementById("result").innerText = "該当する駅がありません";
+                return;
+            }
+            
+            const drumroll = document.getElementById("drumroll");
+            drumroll.play().catch(error => console.log("音声の再生に失敗しました", error));
+            
+            let displayTime = 4; // 240fps (4ms間隔)
+            let elapsedTime = 0;
+            const maxTime = 10000; // 10秒
+            let lastStation = null;  // 最後の駅
+            
+            if (marker) {
+                map.removeLayer(marker);
+            }
+            
+            function animateSelection() {
+                if (elapsedTime >= maxTime) {
+                    // 最後の駅を決定
+                    const finalStation = filteredStations[Math.floor(Math.random() * filteredStations.length)];
+                    lastStation = finalStation;
+                    
+                    // 最終結果の前に、これまでのマーカーを削除
+                    if (marker) {
+                        map.removeLayer(marker);
+                    }
+                    
+                    // 最終結果のマーカーを表示
+                    marker = L.marker([finalStation.lat, finalStation.lon]).addTo(map)
+                        .bindPopup(`目的地: ${finalStation.name}`).openPopup();
+                    
+                    // 結果表示
+                    document.getElementById("result").innerText = `${finalStation.name}(${finalStation.line})`;
+                    const destination = document.getElementById("destination");
+                    destination.innerHTML = `今回の旅の目的地は <span style="font-size: 48px;">${finalStation.name}</span>`;
+                    destination.style.display = "block";
+                    setTimeout(() => destination.style.opacity = "1", 100);
+                    return;
+                }
+                
+                if (marker) {
+                    map.removeLayer(marker);
+                }
+                
+                const tempStation = filteredStations[Math.floor(Math.random() * filteredStations.length)];
+                document.getElementById("result").innerText = `${tempStation.name}(${tempStation.line})`;
+                marker = L.marker([tempStation.lat, tempStation.lon]).addTo(map);
+                
+                elapsedTime += displayTime;
+                displayTime *= 1.1;
+                setTimeout(animateSelection, displayTime);
+            }
+            animateSelection();
+        }
+        
+        function resetMap() {
+            document.getElementById("result").innerText = "ここに結果が表示されます";
+            document.getElementById("destination").style.display = "none";
+            document.getElementById("destination").style.opacity = "0";
+            if (marker) {
+                map.removeLayer(marker);
+                marker = null;
+            }
+        }
+    </script>
+</body>
+</html>
