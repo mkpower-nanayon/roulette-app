@@ -31,7 +31,7 @@
     </style>
 </head>
 <body>
-    <h1>新幹線の旅 目的地ルーレット</h1>
+    <h1>新幹線の旅<br>目的地ルーレット</h1>
     <select id="lineFilter" onchange="updateFilteredStations()">
         <option value="all">すべて</option>
 	<option value="北海道新幹線">北海道新幹線</option>
@@ -44,7 +44,6 @@
     </select>
     <button onclick="drawStation()">駅を抽選</button>
     <button onclick="resetMap()">リセット</button>
-    <p id="result">ここに結果が表示されます</p>
     <div id="map"></div>
     <div id="destination"></div>
 
