@@ -8,4 +8,63 @@
         margin-top: 20px;
         text-align: center;
     }
+    #map {
+        height: 300px; /* iPhoneなどの小さな画面では地図の高さを少し小さく */
+    }
+    .buttons button, .buttons select {
+        font-size: 14px; /* ボタンのフォントサイズを小さく */
+    }
+}
+
+/* 基本的なスタイル */
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f5f5f5;
+}
+
+h1 {
+    font-size: 26px; /* タイトルのフォントサイズ */
+    text-align: center;  /* タイトルを中央揃え */
+    line-height: 1.2;  /* 行間を少し広く */
+    margin-top: 20px;
+}
+
+#map {
+    height: 400px; /* 地図の高さ */
+    width: 100%;
+    margin-bottom: 20px; /* 地図とボタンの間にスペース */
+}
+
+.buttons {
+    display: flex;
+    flex-direction: column;  /* ボタンを縦並びにする */
+    align-items: center;  /* ボタンを中央揃え */
+    margin-top: 20px;  /* 地図から少し下げる */
+}
+
+.buttons button, .buttons select {
+    margin-bottom: 10px;  /* ボタンや選択肢の間にスペース */
+    padding: 10px;
+    font-size: 16px;
+    border: none;
+    border-radius: 5px;
+    background-color: #007bff;
+    color: white;
+    cursor: pointer;
+}
+
+.buttons button:hover {
+    background-color: #0056b3;
+}
+
+#destination {
+    font-size: 24px;  /* 結果のフォントサイズ */
+    width: 80%;  /* 結果表示の幅を調整 */
+    margin: 20px auto;  /* 中央揃え */
+    text-align: center;  /* 結果を中央揃え */
+    padding: 10px;
+    background: rgba(255, 255, 255, 0.8);
+    border-radius: 10px;
 }
